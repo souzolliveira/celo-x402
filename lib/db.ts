@@ -1,15 +1,18 @@
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
-import { DatabaseSync } from "node:sqlite";
+import type { DatabaseSync } from "node:sqlite";
 
+const require = createRequire(import.meta.url);
 let database: DatabaseSync | null = null;
 
 export function getDb(): DatabaseSync {
   if (database) return database;
 
-  const directory = path.join(process.cwd(), "data");
+  const { DatabaseSync: Sqlite } = require("node:sqlite") as typeof import("node:sqlite");
+  const directory = process.env.VERCEL ? path.join("/tmp", "brief") : path.join(process.cwd(), "data");
   fs.mkdirSync(directory, { recursive: true });
-  database = new DatabaseSync(path.join(directory, "turista.sqlite"));
+  database = new Sqlite(path.join(directory, "turista.sqlite"));
   database.exec(`
     CREATE TABLE IF NOT EXISTS profile (
       id INTEGER PRIMARY KEY CHECK (id = 1),

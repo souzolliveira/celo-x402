@@ -32,11 +32,16 @@ type ProfileRow = {
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function getProfile(): Profile | null {
-  const row = getDb()
-    .prepare(
-      "SELECT full_name, email, document, phone, kyc_status, updated_at FROM profile WHERE id = 1",
-    )
-    .get() as ProfileRow | undefined;
+  let row: ProfileRow | undefined;
+  try {
+    row = getDb()
+      .prepare(
+        "SELECT full_name, email, document, phone, kyc_status, updated_at FROM profile WHERE id = 1",
+      )
+      .get() as ProfileRow | undefined;
+  } catch {
+    return null;
+  }
 
   if (!row) return null;
   return {
