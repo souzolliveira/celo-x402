@@ -1,5 +1,7 @@
 import { payingFetch, type OnPaymentInfo } from "@celo/buy-core/x402";
 import { getDefaultAccount, loadSigner } from "@celo/buy-keystore";
+import { isHex, type Hex } from "viem";
+import { privateKeyToAccount, type PrivateKeyAccount } from "viem/accounts";
 import { findCapability, isBuyUrl, type CatalogItem } from "@/lib/catalog";
 import { creditBalance } from "@/lib/credit-balance";
 import { formatUsdc, parseUsdc } from "@/lib/usdc";
@@ -83,10 +85,30 @@ export async function runBuyCall(input: CallInput): Promise<{ status: number; se
   };
 }
 
-async function signer() {
+async function signer(): Promise<PrivateKeyAccount> {
+  const fromEnv = signerFromEnv();
+  if (fromEnv) return fromEnv;
+
   const account = await getDefaultAccount();
   if (!account) throw new Error("The product wallet is not in the buy keychain.");
   return loadSigner(account.name);
+}
+
+function signerFromEnv(): PrivateKeyAccount | null {
+  const raw = process.env.AGENT_PRIVATE_KEY?.trim();
+  if (!raw) return null;
+
+  const key: Hex = raw.startsWith("0x") ? (raw as Hex) : `0x${raw}`;
+  if (!isHex(key) || key.length !== 66) {
+    throw new Error("AGENT_PRIVATE_KEY must be a 32-byte hex private key.");
+  }
+
+  const account = privateKeyToAccount(key);
+  const expected = process.env.AGENT_WALLET_ADDRESS?.trim().toLowerCase();
+  if (expected && account.address.toLowerCase() !== expected) {
+    throw new Error("AGENT_PRIVATE_KEY does not match AGENT_WALLET_ADDRESS.");
+  }
+  return account;
 }
 
 function callCap(): bigint {
