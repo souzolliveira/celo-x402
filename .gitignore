@@ -1,0 +1,19 @@
+# Skills
+.agents/
+.claude/
+
+# Internal Documentation
+docs/
+
+# Local secrets and wallet config
+.env
+
+# Next.js
+node_modules
+.next
+out
+.vercel
+*.tsbuildinfo
+
+# Local database
+data/

@@ -1,0 +1,10 @@
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - gateway-mongo:/data/db
+
+volumes:
+  gateway-mongo:
